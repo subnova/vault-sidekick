@@ -1,5 +1,5 @@
 FROM alpine:3.5
-MAINTAINER Rohith <gambol99@gmail.com>
+MAINTAINER Dale Peakall <dpeakall@thoughtworks.com>
 
 RUN apk update && \
     apk add ca-certificates bash
