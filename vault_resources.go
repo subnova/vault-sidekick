@@ -132,6 +132,7 @@ func (r *VaultResources) Set(value string) error {
 				rn.filename = value
 			case optionTemplatePath:
 				rn.templateFile = value
+				rn.format = "tpl"
 			case optionMaxRetries:
 				maxRetries, err := strconv.ParseInt(value, 10, 32)
 				if err != nil {

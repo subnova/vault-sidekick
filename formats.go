@@ -26,6 +26,7 @@ import (
 
 	"github.com/golang/glog"
 	"gopkg.in/yaml.v2"
+	"text/template"
 )
 
 func writeIniFile(filename string, data map[string]interface{}, mode os.FileMode) error {
@@ -153,6 +154,21 @@ func writeJSONFile(filename string, data map[string]interface{}, mode os.FileMod
 	}
 
 	return writeFile(filename, content, mode)
+}
+
+func writeTemplateFile(filename string, templateFile string, data map[string]interface{}, mode os.FileMode) error {
+	tmpl, err := template.ParseFiles(templateFile)
+	if err != nil {
+		return err
+	}
+	tmpl.Option("missingkey=error")
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		return err
+	}
+
+	return writeFile(filename, buf.Bytes(), mode)
 }
 
 // writeFile writes the file to stdout or an actual file

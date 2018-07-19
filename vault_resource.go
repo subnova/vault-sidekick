@@ -57,7 +57,7 @@ const (
 )
 
 var (
-	resourceFormatRegex = regexp.MustCompile("^(yaml|yml|json|env|ini|txt|cert|bundle|csv)$")
+	resourceFormatRegex = regexp.MustCompile("^(yaml|yml|json|env|ini|txt|cert|bundle|csv|tpl)$")
 
 	// a map of valid resource to retrieve from vault
 	validResources = map[string]bool{
@@ -66,7 +66,6 @@ var (
 		"aws":       true,
 		"secret":    true,
 		"mysql":     true,
-		"tpl":       true,
 		"postgres":  true,
 		"transit":   true,
 		"cubbyhole": true,
@@ -162,10 +161,14 @@ func (r *VaultResource) isValidResource() error {
 		if _, found := r.options["ciphertext"]; !found {
 			return fmt.Errorf("transit requires a ciphertext option")
 		}
-	case "tpl":
-		if _, found := r.options[optionTemplatePath]; !found {
-			return fmt.Errorf("template resource requires a template path option")
-		}
+	}
+
+	if r.templateFile != "" && r.format != "tpl" {
+		return fmt.Errorf("using a template file requires template output format")
+	}
+
+	if r.format == "tpl" && r.templateFile == "" {
+		return fmt.Errorf("template output format requires a template file")
 	}
 
 	return nil

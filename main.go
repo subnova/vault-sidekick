@@ -80,7 +80,7 @@ func main() {
 	for {
 		select {
 		case evt := <-updates:
-			glog.V(10).Infof("recieved an update from the resource: %s", evt.Resource)
+			glog.V(10).Infof("received an update from the resource: %s", evt.Resource)
 			go func(r VaultEvent) {
 				toProcessLock.Lock()
 				defer toProcessLock.Unlock()
@@ -116,7 +116,7 @@ func main() {
 				}
 			}(evt)
 		case <-signalChannel:
-			glog.Infof("recieved a termination signal, shutting down the service")
+			glog.Infof("received a termination signal, shutting down the service")
 			os.Exit(0)
 		}
 	}

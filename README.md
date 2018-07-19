@@ -74,7 +74,7 @@ spec:
       - -cn=pki:project1/certs/example.com:common_name=commons.example.com,revoke=true,update=2h
       - -cn=secret:secret/db/prod/username:file=.credentials
       - -cn=secret:secret/db/prod/password:retries=true
-      - -cn=aws:aws/creds/s3_backup_policy:file=.s3_creds
+      - -cn=aws:aws/creds/s3_backup_policy:file=.s3_creds,tpl=s3template.txt
     volumeMounts:
       - name: secrets
         mountPath: /etc/secrets
@@ -85,13 +85,14 @@ The above equates to:
 - Write all the secrets to the /etc/secrets directory
 - Retrieve a dynamic certificate pair for me, with the common name: 'commons.example.com' and renew the cert when it expires automatically
 - Retrieve the two static secrets /db/prod/{username,password} and write them to .credentials and password.secret respectively
-- Apply the IAM policy, renew the policy when required and file the API tokens to .s3_creds in the /etc/secrets directory
-- Read the template at /etc/templates/db.tmpl, produce the content from Vault and write to /etc/credentials file
+- Retrieve AWS credentials and write them to the file .s3_creds using the go template s3template.txt
 
 ## Authentication
 
 An authentication file can be specified in either yaml of json format which contains a method field, indicating one of the authentication
 methods provided by vault i.e. userpass, token, github etc and then followed by the required arguments for that plugin.
+
+The authentication method can also be set using the environment variable `VAULT_AUTH_METHOD`.  Authentication defaults to `token`.
 
 If the required arguments for that plugin are not contained in the authentication file, fallbacks from environment variables are used.
 Environment variables are prefixed with `VAULT_SIDEKICK`, i.e. `VAULT_SIDEKICK_USERNAME`, `VAULT_SIDEKICK_PASSWORD`.
@@ -107,7 +108,7 @@ The Kubernetes auth plugin supports the following environment variables:
 ## Secret Renewals
 
 The default behaviour of vault-sidekick is **not** to renew a lease, but to retrieve a new secret and allow the previous to
-expire, in order ensure the rotation of secrets. If you don't want this behaviour on a resource you can override using resource options. For exmaple,
+expire, in order ensure the rotation of secrets. If you don't want this behaviour on a resource you can override using resource options. For example,
 your using the mysql dynamic secrets, you want to renew the secret not replace it
 
 ```shell
@@ -136,7 +137,7 @@ or domain within the resource e.g -cn=secret:secrets/myservice/${ENV}/config:fmt
 
 ## Output Formatting
 
-The following output formats are supported: json, yaml, ini, txt, cert, csv, bundle, env
+The following output formats are supported: json, yaml, ini, txt, cert, csv, bundle, env, tpl
 
 Using the following at the demo secrets
 
@@ -164,16 +165,19 @@ In order to change the output format:
 Format: 'cert' is less of a format of more file scheme i.e. is just extracts the 'certificate', 'issuing_ca' and 'private_key' and creates the three files FILE.{ca,key,crt}. The
 bundle format is very similar in the sense it similar takes the private key and certificate and places into a single file.
 
+Format: 'tpl' uses the go template specified in the tpl option to format the vault output. Format defaulted to this when tpl option provided.
+
 ## Resource Options
 
-- **file**: (filaname) by default all file are relative to the output directory specified and will have the name NAME.RESOURCE; the fn options allows you to switch names and paths to write the files
+- **file**: (filename) by default all file are relative to the output directory specified and will have the name NAME.RESOURCE; the fn options allows you to switch names and paths to write the files
 - **mode**: (mode) overrides the default file permissions of the secret from 0664
 - **create**: (create) create the resource
 - **update**: (update) override the lease time of this resource and get/renew a secret on the specified duration e.g 1m, 2d, 5m10s
-- **renew**: (renewal) override the default behavour on this resource, renew the resource when coming close to expiration e.g true, TRUE
+- **renew**: (renewal) override the default behaviour on this resource, renew the resource when coming close to expiration e.g true, TRUE
 - **delay**: (renewal-delay) delay the revoking the lease of a resource for x period once time e.g 1m, 1h20s
 - **revoke**: (revoke) revoke the old lease when you get retrieve a old one e.g. true, TRUE (default to allow the lease to expire and naturally revoke)
 - **fmt**: (format) allows you to specify the output format of the resource / secret, e.g json, yaml, ini, txt
 - **exec** (execute) execute's a command when resource is updated or changed
 - **retries**: (retries) the maximum number of times to retry retrieving a resource. If not set, resources will be retried indefinitely
 - **jitter**: (jitter) an optional maximum jitter duration. If specified, a random duration between 0 and `jitter` will be subtracted from the renewal time for the resource
+- **tpl**: (template) an optional go template file to use for formatting the vault output (required for output format tpl)
