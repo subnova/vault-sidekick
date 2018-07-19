@@ -1,7 +1,7 @@
 
 NAME=vault-sidekick
-AUTHOR ?= ukhomeofficedigital
-REGISTRY ?= quay.io
+AUTHOR ?= subnova
+REGISTRY ?= docker.io
 GOVERSION ?= 1.8.1
 HARDWARE=$(shell uname -m)
 VERSION ?= $(shell awk '/release =/ { print $$3 }' main.go | sed 's/"//g')
@@ -26,8 +26,8 @@ static: deps
 docker-build:
 	@echo "--> Compiling the project"
 	${SUDO} docker run --rm \
-		-v ${PWD}:/go/src/github.com/UKHomeOffice/${NAME} \
-		-w /go/src/github.com/UKHomeOffice/${NAME} \
+		-v ${PWD}:/go/src/github.com/subnova/${NAME} \
+		-w /go/src/github.com/subnova/${NAME} \
 		-e GOOS=linux \
 		golang:${GOVERSION} \
 		make static
